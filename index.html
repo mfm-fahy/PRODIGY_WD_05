@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <style>
+    
+       
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            height: 100%;
+            background: url('dfyb5mq-98685105-0c93-462b-a132-84d2ba083304.gif') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-image 0.5s ease; 
+        }
+     
+        
+
+     
+        #weather-app {
+            background: rgba(300, 355, 355, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            width: 97%;
+            max-width: 800px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.9);
+        }
+        #weather-app:hover {
+          transform: scale(1.05);
+        }
+    
+        .left-section {
+            width: 35%;
+            text-align: center;
+        }
+
+        
+        .right-section {
+            width: 80%;
+        }
+
+     
+        #city-input {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: 80%;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        #get-weather {
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            background-color: rgba(0, 0, 0, 0.4);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #get-weather:hover {
+            background-color:black;
+            color:white;
+            transform:scale(1);
+        }
+
+     
+        .weather-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        #current-icon {
+            width: 80px;
+        }
+
+        .temperature {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .description {
+            font-size: 18px;
+            color: #555;
+        }
+
+        
+        #forecast-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .forecast-day {
+            text-align: center;
+            flex: 1;
+        }
+
+        .forecast-day img {
+            width: 50px;
+        }
+    </style>
+</head>
+<body>
+     <h1 style="text-align: center; margin-top: 20px; color: black;">Weather Application</h1>
+    
+    <div class="current-weather">
+    <h2></h2>
+    </div>
+    <div id="weather-app">
+       
+        <div class="left-section">
+            
+            <input type="text" id="city-input" placeholder="Enter a city">
+            <button id="get-weather">Get Weather</button>
+
+          
+            <div class="current-weather">
+                <h2>Now</h2>
+                <div class="weather-info">
+                    <img id="current-icon" src="" alt="">
+                    <div class="temperature" id="current-temp"></div>
+                    <div class="description" id="current-desc"></div>
+                </div>
+            </div>
+        </div>
+
+   
+        <div class="right-section">
+            
+            <h2>Upcoming Forecasts</h2>
+            
+            <div id="forecast-container"></div>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = '565da1e276811fd0413ada0305b65d26';
+
+        document.getElementById('get-weather').addEventListener('click', () => {
+            const city = document.getElementById('city-input').value;
+            if (city) {
+                fetchWeatherData(city);
+            } else {
+                alert("Please enter a city name.");
+            }
+        });
+
+        async function fetchWeatherData(city) {
+            try {
+             
+                const currentWeatherResponse = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`);
+                if (!currentWeatherResponse.ok) throw new Error('City not found');
+                const currentWeather = await currentWeatherResponse.json();
+
+              
+                document.getElementById('current-temp').textContent = `${currentWeather.main.temp}°C`;
+                document.getElementById('current-desc').textContent = currentWeather.weather[0].description;
+                document.getElementById('current-icon').src = `http://openweathermap.org/img/wn/${currentWeather.weather[0].icon}@2x.png`;
+
+          
+                document.body.style.backgroundImage = selectBackgroundGif(currentWeather.weather[0].main);
+
+              
+                const forecastResponse = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`);
+                const forecastData = await forecastResponse.json();
+                const forecastContainer = document.getElementById('forecast-container');
+                forecastContainer.innerHTML = '';
+
+            
+                for (let i = 0; i < forecastData.list.length; i += 8) {
+                    const day = forecastData.list[i];
+                    const forecastElement = document.createElement('div');
+                    forecastElement.classList.add('forecast-day');
+                    forecastElement.innerHTML = `
+                        <p>${new Date(day.dt_txt).toLocaleDateString()}</p>
+                        <img src="http://openweathermap.org/img/wn/${day.weather[0].icon}@2x.png" alt="Weather Icon">
+                        <p>${day.main.temp}°C</p>
+                    `;
+                    forecastContainer.appendChild(forecastElement);
+                }
+            } catch (error) {
+                alert("Error fetching data. Please check the city name or try again later.");
+            }
+        }
+
+        function selectBackgroundGif(weatherMain) {
+            switch (weatherMain) {
+                case 'Clear':
+                    return 'url(clear_sky.gif)';
+                case 'Clouds':
+                    return 'url(cloudy.gif)';
+                case 'Rain':
+                    return 'url(rain.gif)';
+                case 'Snow':
+                    return 'url(snow.gif)';
+                case 'Thunderstorm':
+                    return 'url(thunderstorm.gif)';
+                default:
+                    return 'url(default_background.jpg)';
+            }
+        }
+    </script>
+</body>
+</html>
